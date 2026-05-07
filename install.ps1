@@ -16,20 +16,38 @@ if (-not (Test-Path $CLAUDE_DIR)) {
     Write-Host "  [+] Created: $CLAUDE_DIR"
 }
 
-# Ham copy co backup (dung binary Copy-Item de giu nguyen encoding UTF-8)
+# Ham copy co backup (dung binary de giu nguyen encoding UTF-8)
+# Backup va ghi file theo kieu stream de tranh loi file bi khoa boi tien trinh khac
 function Copy-DotFile {
     param($src, $dst)
+
+    # --- Backup (non-fatal: warn if file is locked) ---
     if (Test-Path $dst) {
-        Copy-Item $dst "$dst.bak" -Force
-        Write-Host "  [bak] Backup: $dst -> $dst.bak"
+        try {
+            Copy-Item $dst "$dst.bak" -Force -ErrorAction Stop
+            Write-Host "  [bak] Backup: $dst -> $dst.bak"
+        } catch {
+            Write-Warning "  [skip-bak] Cannot backup '$dst' (file locked by another process). Skipping backup."
+        }
     }
-    Copy-Item $src $dst -Force
-    Write-Host "  [ok]  Copied: $dst"
+
+    # --- Write source -> destination via raw streams ---
+    try {
+        $srcBytes = [System.IO.File]::ReadAllBytes($src)
+        $fs = [System.IO.File]::Open($dst, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::ReadWrite)
+        $fs.Write($srcBytes, 0, $srcBytes.Length)
+        $fs.Close()
+        Write-Host "  [ok]  Copied: $dst"
+    } catch {
+        Write-Error "  [ERR] Failed to write '$dst': $_"
+        throw
+    }
 }
 
 Write-Host "Copying Claude CLI settings..."
-Copy-DotFile "$DOTFILES_DIR\claude\settings.json"         "$CLAUDE_DIR\settings.json"
-Copy-DotFile "$DOTFILES_DIR\claude\statusline-command.sh" "$CLAUDE_DIR\statusline-command.sh"
+Copy-DotFile "$DOTFILES_DIR\claude\settings.json"            "$CLAUDE_DIR\settings.json"
+Copy-DotFile "$DOTFILES_DIR\claude\statusline-command.sh"    "$CLAUDE_DIR\statusline-command.sh"
+Copy-DotFile "$DOTFILES_DIR\claude\statusline-command.ps1"   "$CLAUDE_DIR\statusline-command.ps1"
 
 Write-Host ""
 Write-Host "[DONE] Khoi dong lai Claude CLI de ap dung."
