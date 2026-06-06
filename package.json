@@ -1,0 +1,10 @@
+{
+  "name": "@chunghoanganh/claude-settings",
+  "version": "0.1.0",
+  "description": "Cross-platform installer for Claude CLI settings + statusline",
+  "type": "module",
+  "bin": { "claude-settings": "bin/claude-settings.js" },
+  "files": ["bin/", "src/", "README.md"],
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}

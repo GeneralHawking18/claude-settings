@@ -1,12 +1,6 @@
 {
-  "permissions": {
-    "defaultMode": "auto"
-  },
-  "model": "haiku",
-  "statusLine": {
-    "type": "command",
-    "command": "powershell -NoProfile -File ~/.claude/statusline-command.ps1"
-  },
+  "permissions": { "defaultMode": "auto" },
+  "statusLine": { "type": "command" },
   "enabledPlugins": {
     "ralph-loop@claude-plugins-official": true,
     "claude-mem@thedotmack": true,
