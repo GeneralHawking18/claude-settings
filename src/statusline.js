@@ -2,10 +2,10 @@
 let raw = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", c => (raw += c));
-process.stdin.on("end", () => {
+process.stdin.on("end", async () => {
     let d = {};
     try { d = JSON.parse(raw); } catch { /* fallback to empty */ }
-    process.stdout.write(render(d));
+    process.stdout.write(await render(d));
 });
 
 function get(d, ...path) {
@@ -27,6 +27,17 @@ function bar(pct, size = 4) {
     return "█".repeat(filled) + "░".repeat(size - filled);
 }
 
+// Dynamic import so the file works as both ESM (repo) and CommonJS (~/.claude).
+async function gitBranch(dir) {
+    if (!dir) return "";
+    try {
+        const { execSync } = await import("node:child_process");
+        return execSync("git rev-parse --abbrev-ref HEAD", {
+            cwd: dir, stdio: ["ignore", "pipe", "ignore"], timeout: 500,
+        }).toString().trim();
+    } catch { return ""; }
+}
+
 function fmtDur(ms) {
     if (!ms) return "";
     ms = Math.floor(ms);
@@ -39,7 +50,7 @@ function fmtDur(ms) {
     return `${s}s`;
 }
 
-function render(d) {
+async function render(d) {
     const model   = get(d, "model", "id") ?? get(d, "model", "display_name");
     const usedPct = get(d, "context_window", "used_percentage");
     const sep     = " │ ";
@@ -53,8 +64,12 @@ function render(d) {
     const modelS = shorten(model);
     if (modelS) parts.push(`◆ ${modelS}`);
 
-    const cost = get(d, "cost", "total_cost_usd");
-    if (cost != null) parts.push(`$ ${Number(cost).toFixed(2)}`);
+    const branch = await gitBranch(get(d, "workspace", "current_dir") ?? get(d, "cwd"));
+    if (branch) parts.push(`⑂ ${branch}`);
+
+    const added   = get(d, "cost", "total_lines_added") ?? 0;
+    const removed = get(d, "cost", "total_lines_removed") ?? 0;
+    if (added > 0 || removed > 0) parts.push(`+${added}/-${removed}`);
 
     const totalIn  = get(d, "context_window", "total_input_tokens");
     const totalOut = get(d, "context_window", "total_output_tokens") ?? 0;
@@ -63,13 +78,6 @@ function render(d) {
     }
 
     parts.push(`▣ [${bar(usedPct)}]${Math.round(usedPct)}%`);
-
-    const cacheRead  = get(d, "context_window", "current_usage", "cache_read_input_tokens") ?? 0;
-    const inputToks  = get(d, "context_window", "current_usage", "input_tokens") ?? 0;
-    if (cacheRead > 0) {
-        const total = cacheRead + inputToks;
-        if (total > 0) parts.push(`↺ ${Math.floor((cacheRead * 100) / total)}%`);
-    }
 
     const rl5hPct    = get(d, "rate_limits", "five_hour", "used_percentage");
     const rl5hResets = get(d, "rate_limits", "five_hour", "resets_at");

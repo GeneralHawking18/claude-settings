@@ -28,16 +28,16 @@ npx @chunghoanganh/claude-settings install --dry-run
 ## Statusline hiển thị
 
 ```
-◆ Snt4.6 │ $ 0.12 │ ↕ 45k/8k │ ▣ [██░░]48% │ ↺ 72% │ ◉ [█░░░]23% 3h12m │ ◎ [█░░░]18% 5d3h │ ▶ 4s
+◆ Snt4.6 │ ⑂ main │ +250/-45 │ ↕ 45k/8k │ ▣ [██░░]48% │ ◉ [█░░░]23% 3h12m │ ◎ [█░░░]18% 5d3h │ ▶ 4s
 ```
 
 | Ký hiệu | Ý nghĩa |
 |---------|---------|
 | `◆ Snt4.6` | Model đang dùng (rút gọn) |
-| `$ 0.12` | Chi phí session ($USD) |
+| `⑂ main` | Git branch hiện tại (ẩn nếu không phải git repo) |
+| `+250/-45` | Số dòng code thêm/xoá trong session |
 | `↕ 45k/8k` | Tokens in/out |
 | `▣ [██░░]48%` | % context window đã dùng |
-| `↺ 72%` | Hiệu suất cache prompt |
 | `◉ [█░░░]23% 3h12m` | Rate limit 5h + thời gian reset |
 | `◎ [█░░░]18% 5d3h` | Rate limit 7 ngày + thời gian reset |
 | `▶ 4s` | Thời gian turn |
